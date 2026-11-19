@@ -8,6 +8,7 @@ namespace UDIT.IA3.Guardia
         [SerializeField, Min(0f)] private float velocidad = 4f;
 
         private CharacterController _controlador;
+        public bool Agachado = false;
 
         private void Awake()
         {
@@ -16,6 +17,9 @@ namespace UDIT.IA3.Guardia
 
         private void Update()
         {
+            if (Input.GetKeyDown(KeyCode.C))
+                Agachado = !Agachado;
+
             float horizontal = Input.GetAxisRaw("Horizontal");
             float vertical = Input.GetAxisRaw("Vertical");
             Vector3 direccion = Vector3.ClampMagnitude(new Vector3(horizontal, 0f, vertical), 1f);

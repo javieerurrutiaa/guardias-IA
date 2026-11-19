@@ -113,5 +113,42 @@ namespace UDIT.IA3.Guardia
                 Gizmos.DrawLine(transform.position + Vector3.up, lkp + Vector3.up * 0.2f);
             }
         }
+        
+        private void OnGUI()
+        {
+            if (!Application.isPlaying || _agente == null)
+                return;
+
+            if (!_agente.MostrarTraza)
+                return;
+                
+            float x = 10f;
+            float y = 10f;
+
+            string nombreGuardia = "";
+
+            if (gameObject.name == "GuardiaEste")
+            {
+                nombreGuardia = "GUARDIA ESTE";
+                y = 10f;
+                GUI.color = Color.green;
+            }
+            else if (gameObject.name == "GuardiaOeste")
+            {
+                nombreGuardia = "GUARDIA OESTE";
+                y = 40f;
+                GUI.color = Color.cyan;
+            }
+
+            if (nombreGuardia != "")
+            {
+                GUI.Label(
+                new Rect(x, y, 1200, 35),
+                nombreGuardia + ": " + _agente.UltimaTraza
+                );
+            }
+
+            GUI.color = Color.white;  
+        }
     }
 }

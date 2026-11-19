@@ -13,6 +13,9 @@ namespace UDIT.IA3.Guardia
 {
     public class SensorVision : MonoBehaviour, ISensor
     {
+        // Referencia al controlador del jugador para comprobar postura
+        private ControlJugador controlJugador;
+
         // El pivote de la cápsula del jugador está en el centro.
         private const float AlturaCabeza = 0.8f;
         private const float AlturaPies = -0.9f;
@@ -40,11 +43,11 @@ namespace UDIT.IA3.Guardia
 
         [Tooltip("Multiplica la subida. Distancia 0 = junto al guardia, 1 = al límite del alcance.")]
         [SerializeField] private AnimationCurve curvaSubidaPorDistancia = new AnimationCurve(
-            new Keyframe(0f, 9f),
-            new Keyframe(0.13f, 6.5f),
-            new Keyframe(0.40f, 1.5f),
+            new Keyframe(0f, 2f),
+            new Keyframe(0.13f, 1.8f),
+            new Keyframe(0.40f, 1.3f),
             new Keyframe(0.70f, 0.8f),
-            new Keyframe(1f, 0.65f));
+            new Keyframe(1f, 0.5f));
 
         [Tooltip("Cuánto baja por segundo cuando el guardia pierde de vista al jugador.")]
         [Min(0f)] public float VelocidadBajada = 0.08f;
@@ -81,6 +84,8 @@ namespace UDIT.IA3.Guardia
                 GameObject go = GameObject.FindGameObjectWithTag(TagObjetivo);
                 if (go != null) Objetivo = go.transform;
             }
+            if (Objetivo != null)
+                controlJugador = Objetivo.GetComponent<ControlJugador>();
         }
 
         // ───────────────────────────────────────────────────────────────────
@@ -153,11 +158,24 @@ namespace UDIT.IA3.Guardia
             PuntoVisible = torso;
             if (!torsoVisible) PuntoVisible = cabezaVisible ? cabeza : pies;
 
+            // Factor distancia
             float distanciaNormalizada = Mathf.Clamp01(Mathf.Sqrt(distanciaCuadrada) / Alcance);
             float factorDistancia = 1f - distanciaNormalizada;
+            
+            // Factor angulo
             float factorAngulo = Mathf.Clamp01(1f - angulo / semiangulo);
-            // Media provisional hasta que se elija el tercer factor.
-            float evidencia = (factorDistancia + factorAngulo) * 0.5f;
+            
+            // Factor postura
+            float factorPostura = 1f;
+            if (controlJugador != null)
+            {
+                if (controlJugador.Agachado)
+                    factorPostura = 0.4f;
+                else
+                    factorPostura = 1f;
+            }            
+            // Combinacion de 3 factores
+            float evidencia = (factorDistancia + factorAngulo + factorPostura) / 3f;
             float multiplicadorDistancia = curvaSubidaPorDistancia != null && curvaSubidaPorDistancia.length > 0
                 ? Mathf.Max(0f, curvaSubidaPorDistancia.Evaluate(distanciaNormalizada))
                 : 1f;

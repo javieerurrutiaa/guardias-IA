@@ -184,6 +184,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UDIT.IA3.Guardia.ControlJugador
   velocidad: 4
+  Agachado: 0
 --- !u!143 &246031539
 CharacterController:
   m_ObjectHideFlags: 0
@@ -366,6 +367,57 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   VelocidadSubida: 0.8
+  curvaSubidaPorDistancia:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 9
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.13
+      value: 6.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.4
+      value: 1.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7
+      value: 0.8
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0.65
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   VelocidadBajada: 0.08
   UmbralSospecha: 0.35
   UmbralAlerta: 0.8
@@ -401,7 +453,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UDIT.IA3.Guardia.GuardiaAgente
   Cerebro: 1
   FrecuenciaDecision: 10
-  MostrarTraza: 0
+  MostrarTraza: 1
 --- !u!114 &310921931
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1354,12 +1406,63 @@ MonoBehaviour:
   Objetivo: {fileID: 246031543}
   TagObjetivo: Player
   Alcance: 15
-  AnguloVision: 60
+  AnguloVision: 70
   Ojos: {fileID: 552342750}
   CapasQueOcluyen:
     serializedVersion: 2
     m_Bits: 256
   VelocidadSubida: 0.8
+  curvaSubidaPorDistancia:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 9
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.13
+      value: 6.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.4
+      value: 1.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7
+      value: 0.8
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0.65
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   VelocidadBajada: 0.08
   UmbralSospecha: 0.35
   UmbralAlerta: 0.8
@@ -1395,7 +1498,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UDIT.IA3.Guardia.GuardiaAgente
   Cerebro: 0
   FrecuenciaDecision: 10
-  MostrarTraza: 0
+  MostrarTraza: 1
 --- !u!114 &1305344277
 MonoBehaviour:
   m_ObjectHideFlags: 0
