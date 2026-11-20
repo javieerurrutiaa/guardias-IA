@@ -27,13 +27,21 @@ namespace UDIT.IA3.Guardia
         public bool DibujarSospecha = true;
         public bool DibujarUltimaPos = true;
 
+        public bool DibujarAudicion = true;
+        public bool DibujarOrigenRuido = true;
+
+        public Color ColorAudicion = Color.yellow;
+        public Color ColorOrigenRuido = new Color(1f, 0.5f, 0f);
+
         private GuardiaAgente _agente;
         private SensorVision _vision;
+        private SensorSonido _sonido;
 
         private void Awake()
         {
             _agente = GetComponent<GuardiaAgente>();
             _vision = GetComponent<SensorVision>();
+            _sonido = GetComponent<SensorSonido>();
         }
 
         private static Color ColorDe(NivelSospecha n)
@@ -50,6 +58,8 @@ namespace UDIT.IA3.Guardia
         {
             if (_vision == null) _vision = GetComponent<SensorVision>();
             if (_vision == null) return;
+            if (_sonido == null)
+                _sonido = GetComponent<SensorSonido>();
 
             Transform ojos = _vision.Ojos != null ? _vision.Ojos : transform;
             NivelSospecha nivel = _vision.NivelActual;
@@ -102,6 +112,60 @@ namespace UDIT.IA3.Guardia
                     Gizmos.DrawLine(baseBarra, baseBarra + Vector3.right * s);
             }
 
+
+            // ── Visualización auditiva ──────────────────────────
+
+            if (_sonido != null && Application.isPlaying)
+            {
+                // Alcance de audición.
+                if (DibujarAudicion)
+                {
+                    Gizmos.color = ColorAudicion;
+                    Gizmos.DrawWireSphere(
+                        transform.position,
+                        _sonido.AlcanceAudicion
+                    );
+                }
+
+                // Origen del último ruido.
+                if (DibujarOrigenRuido &&
+                    _agente != null &&
+                    _agente.Pizarra != null &&
+                    _agente.Pizarra.Get(ClavesBB.HayRuido, false))
+                {
+                    Vector3 origen = _agente.Pizarra.Get(
+                        ClavesBB.PosicionRuido,
+                        Vector3.zero
+                    );
+
+                    float intensidad = _agente.Pizarra.Get(
+                        ClavesBB.IntensidadRuido,
+                        0f
+                    );
+
+                    float tamano = 0.2f + intensidad * 0.5f;
+
+                    // Esfera en el origen del ruido.
+                    Gizmos.color = ColorOrigenRuido;
+                    Gizmos.DrawSphere(
+                        origen + Vector3.up * 0.2f,
+                        tamano
+                    );
+
+                    // Círculo alrededor del origen.
+                    Gizmos.DrawWireSphere(
+                        origen + Vector3.up * 0.2f,
+                        tamano * 1.8f
+                    );
+
+                    // Línea entre guardia y origen.
+                   Gizmos.color = Color.yellow;
+                   Gizmos.DrawLine(
+                       transform.position + Vector3.up,
+                     origen + Vector3.up * 0.2f
+                 );
+                }
+            }
             // ── La última posición conocida ─────────────────────────────────
             if (DibujarUltimaPos && Application.isPlaying && _agente != null &&
                 _agente.Pizarra != null && _agente.Pizarra.Get(ClavesBB.TieneUltimaPos, false))

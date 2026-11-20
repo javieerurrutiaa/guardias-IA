@@ -59,7 +59,24 @@ namespace UDIT.IA3.Guardia
         public const string HaLlegado = "haLlegado";
 
         // ── Opcional (§7 del enunciado): blackboard compartido ─────────────
+        // ── Opcional (§7): percepción auditiva ────────────────────────────
 
+        /// <summary>bool · ¿se ha detectado un ruido pendiente?</summary>
+        public const string HayRuido = "hayRuido";
+
+        /// <summary>Vector3 · posición donde se originó el último ruido.</summary>
+        public const string PosicionRuido = "posicionRuido";
+
+        /// <summary>float 0..1 · intensidad del último ruido detectado.</summary>
+        public const string IntensidadRuido = "intensidadRuido";
+
+        /// <summary>float · tiempo restante de validez del ruido.</summary>
+        public const string TiempoRuido = "tiempoRuido";
+
+        /// Evidencias de percepcion
+        public const string EvidenciaVisual = "evidenciaVisual";
+
+        public const string EvidenciaAuditiva = "evidenciaAuditiva";
         /// <summary>bool · alerta de grupo. La escribe OTRO guardia, con latencia.</summary>
         public const string AlertaDeGrupo = "alertaDeGrupo";
     }

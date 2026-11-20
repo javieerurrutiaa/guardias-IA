@@ -16,6 +16,8 @@ namespace UDIT.IA3.Guardia
         // Referencia al controlador del jugador para comprobar postura
         private ControlJugador controlJugador;
 
+        private GestorSospecha gestorSospecha;
+        
         // El pivote de la cápsula del jugador está en el centro.
         private const float AlturaCabeza = 0.8f;
         private const float AlturaPies = -0.9f;
@@ -41,6 +43,8 @@ namespace UDIT.IA3.Guardia
         [Tooltip("Ritmo base de subida. Se multiplica por la evidencia y la curva de distancia.")]
         [Min(0f)] public float VelocidadSubida = 0.8f;
 
+
+        
         [Tooltip("Multiplica la subida. Distancia 0 = junto al guardia, 1 = al límite del alcance.")]
         [SerializeField] private AnimationCurve curvaSubidaPorDistancia = new AnimationCurve(
             new Keyframe(0f, 2f),
@@ -49,22 +53,8 @@ namespace UDIT.IA3.Guardia
             new Keyframe(0.70f, 0.8f),
             new Keyframe(1f, 0.5f));
 
-        [Tooltip("Cuánto baja por segundo cuando el guardia pierde de vista al jugador.")]
-        [Min(0f)] public float VelocidadBajada = 0.08f;
-
-        [Tooltip("Umbral tranquilo → sospecha (al subir).")]
-        [Range(0f, 1f)] public float UmbralSospecha = 0.35f;
-
-        [Tooltip("Umbral sospecha → alerta (al subir).")]
-        [Range(0f, 1f)] public float UmbralAlerta = 0.8f;
-
-        [Tooltip("Cuánto hay que bajar por debajo del umbral para volver atrás. " +
-                 "Sin esto el guardia parpadea entre estados. Es la HISTÉRESIS.")]
-        [Range(0f, 0.5f)] public float Histeresis = 0.1f;
-
-        // Estado interno del sensor. Lo publica en la pizarra al final de Percibir.
-        private float _sospecha;
-        private NivelSospecha _nivel = NivelSospecha.Tranquilo;
+  
+       
         private bool _visiblePrevio;
         private Vector3 _ultimaPosVista;
 
@@ -72,12 +62,37 @@ namespace UDIT.IA3.Guardia
         public bool VisibleAhora { get; private set; }
         /// <summary>Punto alcanzado por la visión cuando VisibleAhora es true.</summary>
         public Vector3 PuntoVisible { get; private set; }
-        public float SospechaActual { get { return _sospecha; } }
-        public NivelSospecha NivelActual { get { return _nivel; } }
+        public float SospechaActual
+        {
+            get
+            {
+                if (gestorSospecha != null)
+                {
+                    return gestorSospecha.SospechaActual;
+                }
+
+                return 0f;
+            }
+        }
+
+        public NivelSospecha NivelActual
+        {
+            get
+            {
+                if (gestorSospecha != null)
+                {
+                    return gestorSospecha.NivelActual;
+                }
+
+                return NivelSospecha.Tranquilo;
+            }
+        }
+    
 
         private void Awake()
         {
             if (Ojos == null) Ojos = transform;
+            gestorSospecha = GetComponent<GestorSospecha>();
 
             if (Objetivo == null && !string.IsNullOrEmpty(TagObjetivo))
             {
@@ -92,34 +107,45 @@ namespace UDIT.IA3.Guardia
         //  EL CICLO DE PERCEPCIÓN
         // ───────────────────────────────────────────────────────────────────
 
-        public void Percibir(Blackboard bb)
-        {
-            bool visible = ComprobarVision(out float subidaPorSegundo);
-            VisibleAhora = visible;
-
-            ActualizarSospecha(visible ? subidaPorSegundo : -VelocidadBajada, Time.deltaTime);
-
-            // ── Publicar en la pizarra ──────────────────────────────────────
-            bb.Set(ClavesBB.Visible, visible);
-            bb.Set(ClavesBB.Sospecha, _sospecha);
-            bb.Set(ClavesBB.Nivel, _nivel);
-
-            // Al perderlo, se publica la última posición que sí se pudo observar.
-            if (visible)
+       
+            public void Percibir(Blackboard bb)
             {
-                _ultimaPosVista = Objetivo.position;
-                bb.Set(ClavesBB.PosicionVisible, _ultimaPosVista);
-                if (!_visiblePrevio) bb.Set(ClavesBB.TieneUltimaPos, false);
-            }
-            else if (_visiblePrevio)
-            {
-                bb.Set(ClavesBB.UltimaPos, _ultimaPosVista);
-                bb.Set(ClavesBB.TieneUltimaPos, true);
-                bb.Set(ClavesBB.VecesPerdido, bb.Get(ClavesBB.VecesPerdido, 0) + 1);
+                bool visible = ComprobarVision(out float subidaPorSegundo);
+
+                VisibleAhora = visible;
+
+                // Publicar evidencia visual.
+                bb.Set(
+                    ClavesBB.EvidenciaVisual,
+                    visible ? subidaPorSegundo : 0f
+                );
+
+                bb.Set(ClavesBB.Visible, visible);
+
+                // Guardar la última posición visible.
+                if (visible)
+                {
+                    _ultimaPosVista = Objetivo.position;
+
+                    bb.Set(ClavesBB.PosicionVisible, _ultimaPosVista);
+
+                    if (!_visiblePrevio)
+                        bb.Set(ClavesBB.TieneUltimaPos, false);
+                }
+                else if (_visiblePrevio)
+                {
+                    bb.Set(ClavesBB.UltimaPos, _ultimaPosVista);
+                    bb.Set(ClavesBB.TieneUltimaPos, true);
+
+                    bb.Set(
+                        ClavesBB.VecesPerdido,
+                        bb.Get(ClavesBB.VecesPerdido, 0) + 1
+                    );
+                }
+
+                _visiblePrevio = visible;
             }
 
-            _visiblePrevio = visible;
-        }
 
         // ───────────────────────────────────────────────────────────────────
         //  LAS TRES ETAPAS
@@ -189,43 +215,6 @@ namespace UDIT.IA3.Guardia
             float distancia = haciaPunto.magnitude;
             return distancia == 0f ||
                    !Physics.Raycast(origen, haciaPunto / distancia, distancia, CapasQueOcluyen, QueryTriggerInteraction.Ignore);
-        }
-
-        // ───────────────────────────────────────────────────────────────────
-        //  EL MEDIDOR DE SOSPECHA
-        // ───────────────────────────────────────────────────────────────────
-
-        private void ActualizarSospecha(float cambioPorSegundo, float dt)
-        {
-            _sospecha = Mathf.Clamp01(_sospecha + cambioPorSegundo * dt);
-            _nivel = ActualizarNivel(_sospecha, _nivel);
-        }
-
-        /// <summary>
-        /// Para bajar de nivel, la sospecha debe cruzar el umbral de subida
-        /// menos el margen de histéresis.
-        /// </summary>
-        private NivelSospecha ActualizarNivel(float s, NivelSospecha actual)
-        {
-            if (s <= 0f) return NivelSospecha.Tranquilo;
-
-            switch (actual)
-            {
-                case NivelSospecha.Tranquilo:
-                    if (s >= UmbralSospecha)
-                        return s >= UmbralAlerta ? NivelSospecha.Alerta : NivelSospecha.Sospecha;
-                    break;
-
-                case NivelSospecha.Sospecha:
-                    if (s >= UmbralAlerta) return NivelSospecha.Alerta;
-                    if (s < UmbralSospecha - Histeresis) return NivelSospecha.Tranquilo;
-                    break;
-
-                case NivelSospecha.Alerta:
-                    if (s < UmbralAlerta - Histeresis) return NivelSospecha.Sospecha;
-                    break;
-            }
-            return actual;
         }
     }
 }

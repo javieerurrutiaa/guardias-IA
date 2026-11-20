@@ -53,6 +53,7 @@ namespace UDIT.IA3.Guardia
         private readonly List<ISensor> _sensores = new List<ISensor>();
         private IDecisor _decisor;
         private LocomocionNavMesh _locomocion;
+        private GestorSospecha _gestorSospecha;
 
         private float _proximaDecision;
         private TipoDecisor _cerebroMontado;
@@ -73,12 +74,23 @@ namespace UDIT.IA3.Guardia
             Pizarra.Set(ClavesBB.Destino, transform.position);
             Pizarra.Set(ClavesBB.HaLlegado, true);
             Pizarra.Set(ClavesBB.AlertaDeGrupo, false);
+            Pizarra.Set(ClavesBB.EvidenciaVisual, 0f);
+            Pizarra.Set(ClavesBB.EvidenciaAuditiva, 0f);
+            Pizarra.Set(ClavesBB.HayRuido, false);
+            Pizarra.Set(ClavesBB.PosicionRuido, Vector3.zero);
+            Pizarra.Set(ClavesBB.IntensidadRuido, 0f);
+            Pizarra.Set(ClavesBB.TiempoRuido, 0f);
 
             // Todos los sensores que lleve el GameObject, sean los que sean.
             // Añadir oído en el apartado opcional es soltar un componente aquí.
             GetComponents(_sensores);
 
             _locomocion = GetComponent<LocomocionNavMesh>();
+            _gestorSospecha = GetComponent<GestorSospecha>();
+
+            if (_gestorSospecha == null)
+                Debug.LogError("Falta GestorSospecha en " + gameObject.name);
+
             Acciones = new AccionesGuardia(transform, GetComponent<RutaPatrulla>());
 
             MontarCerebro(Cerebro);
@@ -108,6 +120,10 @@ namespace UDIT.IA3.Guardia
             // ── 1. PERCIBIR ── los sensores ESCRIBEN en la pizarra
             for (int i = 0; i < _sensores.Count; i++)
                 _sensores[i].Percibir(Pizarra);
+            
+            // ── 1.5 ACTUALIZAR SOSPECHA ──
+            if (_gestorSospecha != null)
+                _gestorSospecha.Actualizar(Pizarra);
 
             // ── 2. PENSAR ── el decisor LEE la pizarra y escribe intenciones
             if (Time.time >= _proximaDecision)
